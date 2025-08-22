@@ -10,58 +10,75 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class UsersUiState(
+    val isLoading: Boolean = true,
     val users: List<User> = emptyList(),
-    val followedUsers: Set<Int> = emptySet(),
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val error: String? = null,
+    val followedUsers: Set<Int> = emptySet()
 )
 
-class UsersViewModel(private val userRepository: UserRepository) : ViewModel() {
+class UsersViewModel(
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UsersUiState())
     val uiState: StateFlow<UsersUiState> = _uiState.asStateFlow()
 
     init {
         loadUsers()
+        loadFollowedUsers()
+    }
+
+    private fun loadFollowedUsers() {
+        viewModelScope.launch {
+            try {
+                val followedUsers = userRepository.getFollowedUsers()
+                _uiState.value = _uiState.value.copy(followedUsers = followedUsers)
+            } catch (e: Exception) {
+                // Handle error silently for followed users loading
+            }
+        }
     }
 
     fun loadUsers() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-                errorMessage = null
-            )
+        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            userRepository.getUsers().fold(
+        viewModelScope.launch {
+            val result = userRepository.getUsers()
+            result.fold(
                 onSuccess = { users ->
                     _uiState.value = _uiState.value.copy(
+                        isLoading = false,
                         users = users,
-                        followedUsers = userRepository.getFollowedUsers(),
-                        isLoading = false
+                        error = null
                     )
                 },
-                onFailure = { error ->
+                onFailure = { exception ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = error.message ?: "Unknown error occurred"
+                        error = exception.message ?: "Unknown error"
                     )
                 }
             )
         }
     }
 
-    fun toggleFollow(userId: Int) {
-        val isCurrentlyFollowed = _uiState.value.followedUsers.contains(userId)
+    fun toggleFollowUser(userId: Int) {
+        viewModelScope.launch {
+            try {
+                val currentFollowed = _uiState.value.followedUsers
+                val newFollowed = if (currentFollowed.contains(userId)) {
+                    userRepository.unfollowUser(userId)
+                    currentFollowed - userId
+                } else {
+                    userRepository.followUser(userId)
+                    currentFollowed + userId
+                }
 
-        if (isCurrentlyFollowed) {
-            userRepository.unfollowUser(userId)
-        } else {
-            userRepository.followUser(userId)
+                _uiState.value = _uiState.value.copy(followedUsers = newFollowed)
+            } catch (e: Exception) {
+                // Handle error - could show a toast or error message
+            }
         }
-
-        _uiState.value = _uiState.value.copy(
-            followedUsers = userRepository.getFollowedUsers()
-        )
     }
 
     fun retry() {

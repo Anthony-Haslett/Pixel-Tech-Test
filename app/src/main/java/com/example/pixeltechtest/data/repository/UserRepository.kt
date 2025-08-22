@@ -1,22 +1,24 @@
 package com.example.pixeltechtest.data.repository
 
-import android.content.Context
-import android.content.SharedPreferences
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import com.example.pixeltechtest.data.model.BadgeCounts
 import com.example.pixeltechtest.data.model.User
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import androidx.core.content.edit
 
-class UserRepository(context: Context) {
-    private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences("user_follows", Context.MODE_PRIVATE)
+open class UserRepository(private val dataStore: DataStore<Preferences>) {
 
-    suspend fun getUsers(): Result<List<User>> = withContext(Dispatchers.IO) {
+    open suspend fun getUsers(): Result<List<User>> = withContext(Dispatchers.IO) {
         try {
             val url = URL("https://api.stackexchange.com/2.2/users?page=1&pagesize=20&order=desc&sort=reputation&site=stackoverflow")
             val connection = url.openConnection() as HttpURLConnection
@@ -51,7 +53,7 @@ class UserRepository(context: Context) {
                     userId = userJson.getInt("user_id"),
                     displayName = userJson.getString("display_name"),
                     reputation = userJson.getInt("reputation"),
-                    profileImage = userJson.optString("profile_image").takeIf { it.isNotEmpty() },
+                    profileImage = userJson.optString("profile_image").takeIf { it.isNotEmpty() } ?: "",
                     location = userJson.optString("location").takeIf { it.isNotEmpty() },
                     websiteUrl = userJson.optString("website_url").takeIf { it.isNotEmpty() },
                     link = userJson.getString("link"),
@@ -76,19 +78,36 @@ class UserRepository(context: Context) {
         return users
     }
 
-    fun followUser(userId: Int) {
-        sharedPreferences.edit { putBoolean(userId.toString(), true) }
+    suspend fun followUser(userId: Int) {
+        val key = booleanPreferencesKey("user_followed_$userId")
+        dataStore.edit { preferences ->
+            preferences[key] = true
+        }
     }
 
-    fun unfollowUser(userId: Int) {
-        sharedPreferences.edit { remove(userId.toString()) }
+    suspend fun unfollowUser(userId: Int) {
+        val key = booleanPreferencesKey("user_followed_$userId")
+        dataStore.edit { preferences ->
+            preferences.remove(key)
+        }
     }
 
-    fun isUserFollowed(userId: Int): Boolean {
-        return sharedPreferences.getBoolean(userId.toString(), false)
+    suspend fun isUserFollowed(userId: Int): Boolean {
+        val key = booleanPreferencesKey("user_followed_$userId")
+        return dataStore.data.map { preferences ->
+            preferences[key] ?: false
+        }.first()
     }
 
-    fun getFollowedUsers(): Set<Int> {
-        return sharedPreferences.all.keys.mapNotNull { it.toIntOrNull() }.toSet()
+    suspend fun getFollowedUsers(): Set<Int> {
+        return dataStore.data.map { preferences ->
+            preferences.asMap().keys
+                .mapNotNull { key ->
+                    if (key.name.startsWith("user_followed_")) {
+                        key.name.removePrefix("user_followed_").toIntOrNull()
+                    } else null
+                }
+                .toSet()
+        }.first()
     }
 }

@@ -68,7 +68,3 @@ Pixel-Tech-Test is an Android application written in Kotlin using Jetpack Compos
 - **Compose** is modern and required.
 - **No third-party frameworks** keeps the code simple and demonstrates core Android/Kotlin skills.
 - **Local persistence** with SharedPreferences is lightweight and sufficient for the requirements.
-
-## Contact
-
-For questions or feedback, please open an issue or contact me via GitHub.
