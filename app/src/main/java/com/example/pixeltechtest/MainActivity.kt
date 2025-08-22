@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.pixeltechtest.data.repository.UserRepository
-import com.example.pixeltechtest.ui.compose.UsersScreen
+import com.example.pixeltechtest.ui.navigation.MainNavigationScreen
 import com.example.pixeltechtest.ui.theme.PixelTechTestTheme
 import com.example.pixeltechtest.ui.viewmodel.UsersViewModel
 
@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PixelTechTestTheme {
-                UsersScreen(viewModel = usersViewModel)
+                MainNavigationScreen(viewModel = usersViewModel)
             }
         }
     }

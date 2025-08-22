@@ -15,11 +15,16 @@ import com.example.pixeltechtest.ui.viewmodel.UsersViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UsersScreen(
+fun FollowingScreen(
     viewModel: UsersViewModel,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Filter to show only followed users
+    val followedUsers = uiState.users.filter { user ->
+        uiState.followedUsers.contains(user.userId)
+    }
 
     when {
         uiState.isLoading -> {
@@ -78,17 +83,46 @@ fun UsersScreen(
             }
         }
 
+        followedUsers.isEmpty() -> {
+            // Empty state - no followed users
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "No Following Users Yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Start following users from the All Users tab to see them here!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         else -> {
-            // Success state - display users
+            // Success state - display followed users
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                itemsIndexed(uiState.users) { index, user ->
+                itemsIndexed(followedUsers) { index, user ->
                     UserListItem(
                         user = user,
                         ranking = index + 1,
-                        isFollowed = uiState.followedUsers.contains(user.userId),
+                        isFollowed = true, // All users in this list are followed
                         onFollowClick = { viewModel.toggleFollowUser(user.userId) }
                     )
                 }
