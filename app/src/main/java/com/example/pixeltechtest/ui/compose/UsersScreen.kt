@@ -208,10 +208,11 @@ fun UsersList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = 8.dp)
     ) {
-        items(users) { user ->
+        items(users.size) { index ->
             UserListItem(
-                user = user,
-                isFollowed = followedUsers.contains(user.userId),
+                user = users[index],
+                ranking = index + 1,
+                isFollowed = followedUsers.contains(users[index].userId),
                 onFollowToggle = onFollowToggle
             )
         }

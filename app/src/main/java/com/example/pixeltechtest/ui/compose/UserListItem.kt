@@ -20,6 +20,7 @@ import java.text.NumberFormat
 @Composable
 fun UserListItem(
     user: User,
+    ranking: Int,
     isFollowed: Boolean,
     onFollowToggle: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -37,6 +38,12 @@ fun UserListItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Ranking Number
+            RankingBadge(
+                ranking = ranking,
+                modifier = Modifier.padding(end = 16.dp)
+            )
+
             // Profile Image Placeholder
             UserProfileImage(
                 displayName = user.displayName,
@@ -82,6 +89,42 @@ fun UserListItem(
             FollowButton(
                 isFollowed = isFollowed,
                 onFollowToggle = { onFollowToggle(user.userId) }
+            )
+        }
+    }
+}
+
+@Composable
+fun RankingBadge(
+    ranking: Int,
+    modifier: Modifier = Modifier
+) {
+    val badgeColor = when (ranking) {
+        1 -> MaterialTheme.colorScheme.tertiary // Gold-ish for #1
+        in 2..3 -> MaterialTheme.colorScheme.secondary // Silver-ish for top 3
+        else -> MaterialTheme.colorScheme.surfaceVariant // Default for others
+    }
+
+    val textColor = when (ranking) {
+        1 -> MaterialTheme.colorScheme.onTertiary
+        in 2..3 -> MaterialTheme.colorScheme.onSecondary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Surface(
+        modifier = modifier
+            .size(36.dp),
+        shape = CircleShape,
+        color = badgeColor
+    ) {
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = ranking.toString(),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = textColor
             )
         }
     }
