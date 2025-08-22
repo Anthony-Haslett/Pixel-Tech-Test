@@ -33,6 +33,11 @@ fun MainNavigationScreen(
     val navController = rememberNavController()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Refresh followed users when the screen is first composed or recomposed
+    LaunchedEffect(Unit) {
+        viewModel.refreshFollowedUsers()
+    }
+
     val items = listOf(
         Screen.AllUsers,
         Screen.Following

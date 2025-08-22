@@ -84,4 +84,8 @@ class UsersViewModel(
     fun retry() {
         loadUsers()
     }
+
+    fun refreshFollowedUsers() {
+        loadFollowedUsers()
+    }
 }
