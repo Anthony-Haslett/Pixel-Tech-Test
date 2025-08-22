@@ -21,6 +21,13 @@ fun UsersScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Determine which users to display based on search state
+    val usersToShow = if (uiState.isSearchActive && uiState.searchQuery.isNotEmpty()) {
+        uiState.filteredUsers
+    } else {
+        uiState.users
+    }
+
     when {
         uiState.isLoading -> {
             // Loading state
@@ -78,13 +85,42 @@ fun UsersScreen(
             }
         }
 
+        uiState.isSearchActive && uiState.searchQuery.isNotEmpty() && usersToShow.isEmpty() -> {
+            // No search results found
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "No users found",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Try searching with a different keyword",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         else -> {
-            // Success state - display users
+            // Success state - display users (all or filtered)
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                itemsIndexed(uiState.users) { index, user ->
+                itemsIndexed(usersToShow) { index, user ->
                     UserListItem(
                         user = user,
                         ranking = index + 1,

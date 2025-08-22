@@ -12,8 +12,11 @@ import kotlinx.coroutines.launch
 data class UsersUiState(
     val isLoading: Boolean = true,
     val users: List<User> = emptyList(),
+    val filteredUsers: List<User> = emptyList(),
     val error: String? = null,
-    val followedUsers: Set<Int> = emptySet()
+    val followedUsers: Set<Int> = emptySet(),
+    val searchQuery: String = "",
+    val isSearchActive: Boolean = false
 )
 
 class UsersViewModel(
@@ -87,5 +90,32 @@ class UsersViewModel(
 
     fun refreshFollowedUsers() {
         loadFollowedUsers()
+    }
+
+    fun updateSearchQuery(query: String) {
+        _uiState.value = _uiState.value.copy(searchQuery = query)
+        filterUsers(query)
+    }
+
+    fun setSearchActive(isActive: Boolean) {
+        _uiState.value = _uiState.value.copy(isSearchActive = isActive)
+        if (!isActive) {
+            // Clear search when deactivating
+            _uiState.value = _uiState.value.copy(searchQuery = "", filteredUsers = emptyList())
+        }
+    }
+
+    private fun filterUsers(query: String) {
+        val currentUsers = _uiState.value.users
+        val filtered = if (query.isBlank()) {
+            emptyList()
+        } else {
+            currentUsers.filter { user ->
+                user.displayName.contains(query, ignoreCase = true) ||
+                        user.location?.contains(query, ignoreCase = true) == true ||
+                        user.reputation.toString().contains(query)
+            }
+        }
+        _uiState.value = _uiState.value.copy(filteredUsers = filtered)
     }
 }

@@ -21,9 +21,19 @@ fun FollowingScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Filter to show only followed users
+    // Filter to show only followed users, then apply search if active
     val followedUsers = uiState.users.filter { user ->
         uiState.followedUsers.contains(user.userId)
+    }
+
+    val usersToShow = if (uiState.isSearchActive && uiState.searchQuery.isNotEmpty()) {
+        followedUsers.filter { user ->
+            user.displayName.contains(uiState.searchQuery, ignoreCase = true) ||
+            user.location?.contains(uiState.searchQuery, ignoreCase = true) == true ||
+            user.reputation.toString().contains(uiState.searchQuery)
+        }
+    } else {
+        followedUsers
     }
 
     when {
@@ -83,6 +93,35 @@ fun FollowingScreen(
             }
         }
 
+        uiState.isSearchActive && uiState.searchQuery.isNotEmpty() && usersToShow.isEmpty() -> {
+            // No search results found in followed users
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "No followed users found",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "None of your followed users match the search",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         followedUsers.isEmpty() -> {
             // Empty state - no followed users
             Box(
@@ -113,12 +152,12 @@ fun FollowingScreen(
         }
 
         else -> {
-            // Success state - display followed users
+            // Success state - display followed users (all or filtered)
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                itemsIndexed(followedUsers) { index, user ->
+                itemsIndexed(usersToShow) { index, user ->
                     UserListItem(
                         user = user,
                         ranking = index + 1,
