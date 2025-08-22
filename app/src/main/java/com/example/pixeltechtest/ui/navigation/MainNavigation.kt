@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
@@ -12,22 +13,26 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pixeltechtest.ui.compose.FollowingScreen
 import com.example.pixeltechtest.ui.compose.UsersScreen
+import com.example.pixeltechtest.ui.compose.UserDetailsScreen
 import com.example.pixeltechtest.ui.viewmodel.UsersViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     object AllUsers : Screen("all_users", "All Users", Icons.Default.Person)
     object Following : Screen("following", "Following", Icons.Default.Favorite)
+    object UserDetails : Screen("user_details/{userId}", "User Details", Icons.Default.Person)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,64 +57,124 @@ fun MainNavigationScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            if (uiState.isSearchActive) {
-                // Search TopAppBar
-                TopAppBar(
-                    title = {
-                        OutlinedTextField(
-                            value = uiState.searchQuery,
-                            onValueChange = { viewModel.updateSearchQuery(it) },
-                            placeholder = { Text("Search users...") },
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                                focusedPlaceholderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-                                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-                                focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { viewModel.setSearchActive(false) }) {
-                            Icon(
-                                Icons.Default.Clear,
-                                contentDescription = "Close Search",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            } else {
-                // Normal TopAppBar
-                TopAppBar(
-                    title = {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            val currentRoute = currentDestination?.route
+            val isOnFollowingScreen = currentRoute == Screen.Following.route
+            val isOnUserDetailsScreen = currentRoute?.startsWith("user_details") == true
+
+            when {
+                // Following Screen - Simple top bar with back button
+                isOnFollowingScreen -> {
+                    TopAppBar(
+                        title = {
                             Text(
-                                text = "StackOverflow Users",
+                                text = "Following",
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { viewModel.setSearchActive(true) }) {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.navigate(Screen.AllUsers.route) }) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     )
-                )
+                }
+
+                // UserDetails Screen - Simple top bar with back button
+                isOnUserDetailsScreen -> {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = "User Details",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+
+                // Search mode active (only for All Users screen)
+                uiState.isSearchActive -> {
+                    TopAppBar(
+                        title = {
+                            OutlinedTextField(
+                                value = uiState.searchQuery,
+                                onValueChange = { viewModel.updateSearchQuery(it) },
+                                placeholder = { Text("Search users...") },
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                                    focusedPlaceholderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                    focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { viewModel.setSearchActive(false) }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Close Search",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+
+                // Default: All Users Screen - Normal state with search button
+                else -> {
+                    TopAppBar(
+                        title = {
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "StackOverflow Users",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { viewModel.setSearchActive(true) }) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
             }
         },
         bottomBar = {
@@ -160,10 +225,33 @@ fun MainNavigationScreen(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.AllUsers.route) {
-                UsersScreen(viewModel = viewModel)
+                UsersScreen(
+                    viewModel = viewModel,
+                    onUserClick = { userId ->
+                        navController.navigate("user_details/$userId")
+                    }
+                )
             }
             composable(Screen.Following.route) {
-                FollowingScreen(viewModel = viewModel)
+                FollowingScreen(
+                    viewModel = viewModel,
+                    onUserClick = { userId ->
+                        navController.navigate("user_details/$userId")
+                    }
+                )
+            }
+            composable(
+                route = Screen.UserDetails.route,
+                arguments = listOf(navArgument("userId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+                UserDetailsScreen(
+                    userId = userId,
+                    viewModel = viewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }

@@ -17,6 +17,7 @@ import com.example.pixeltechtest.ui.viewmodel.UsersViewModel
 @Composable
 fun UsersScreen(
     viewModel: UsersViewModel,
+    onUserClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -125,7 +126,9 @@ fun UsersScreen(
                         user = user,
                         ranking = index + 1,
                         isFollowed = uiState.followedUsers.contains(user.userId),
-                        onFollowClick = { viewModel.toggleFollowUser(user.userId) }
+                        isLoading = uiState.followingInProgress.contains(user.userId),
+                        onFollowClick = { viewModel.toggleFollowUser(user.userId) },
+                        onUserClick = { onUserClick(user.userId) }
                     )
                 }
             }

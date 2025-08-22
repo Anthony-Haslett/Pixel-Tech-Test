@@ -1,6 +1,7 @@
 package com.example.pixeltechtest.ui.compose
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,13 +21,16 @@ fun UserListItem(
     user: User,
     ranking: Int,
     isFollowed: Boolean,
+    isLoading: Boolean = false,
     onFollowClick: () -> Unit,
+    onUserClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onUserClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -85,9 +89,10 @@ fun UserListItem(
                 }
             }
 
-            // Follow button
+            // Follow button with loading indicator
             Button(
                 onClick = onFollowClick,
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isFollowed) {
                         MaterialTheme.colorScheme.secondary
@@ -95,12 +100,21 @@ fun UserListItem(
                         MaterialTheme.colorScheme.primary
                     }
                 ),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.width(100.dp)
             ) {
-                Text(
-                    text = if (isFollowed) "Unfollow" else "Follow",
-                    fontSize = 12.sp
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text(
+                        text = if (isFollowed) "Unfollow" else "Follow",
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }

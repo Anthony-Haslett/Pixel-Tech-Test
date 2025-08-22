@@ -15,6 +15,7 @@ data class UsersUiState(
     val filteredUsers: List<User> = emptyList(),
     val error: String? = null,
     val followedUsers: Set<Int> = emptySet(),
+    val followingInProgress: Set<Int> = emptySet(),
     val searchQuery: String = "",
     val isSearchActive: Boolean = false
 )
@@ -68,6 +69,11 @@ class UsersViewModel(
     fun toggleFollowUser(userId: Int) {
         viewModelScope.launch {
             try {
+                // Add user to following in progress
+                _uiState.value = _uiState.value.copy(
+                    followingInProgress = _uiState.value.followingInProgress + userId
+                )
+
                 val currentFollowed = _uiState.value.followedUsers
                 val newFollowed = if (currentFollowed.contains(userId)) {
                     userRepository.unfollowUser(userId)
@@ -77,8 +83,15 @@ class UsersViewModel(
                     currentFollowed + userId
                 }
 
-                _uiState.value = _uiState.value.copy(followedUsers = newFollowed)
+                _uiState.value = _uiState.value.copy(
+                    followedUsers = newFollowed,
+                    followingInProgress = _uiState.value.followingInProgress - userId
+                )
             } catch (e: Exception) {
+                // Remove from progress even on error
+                _uiState.value = _uiState.value.copy(
+                    followingInProgress = _uiState.value.followingInProgress - userId
+                )
                 // Handle error - could show a toast or error message
             }
         }

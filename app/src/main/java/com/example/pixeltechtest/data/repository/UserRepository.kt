@@ -95,7 +95,7 @@ open class UserRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun isUserFollowed(userId: Int): Boolean {
         val key = booleanPreferencesKey("user_followed_$userId")
         return dataStore.data.map { preferences ->
-            preferences[key] ?: false
+            preferences[key] == true
         }.first()
     }
 
