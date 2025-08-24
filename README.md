@@ -2,18 +2,37 @@
 
 ## Overview
 
-Pixel-Tech-Test is an Android application written in Kotlin using Jetpack Compose. It fetches and displays the top 20 StackOverflow users, showing their profile image, name, and reputation. Users can be "followed" locally, with the follow status persisting between sessions.
+Pixel-Tech-Test is an Android application written in Kotlin using Jetpack Compose. It fetches and displays the top 20 StackOverflow users, showing their profile information, statistics, and allowing users to follow/unfollow them locally. The app features a modern tabbed interface with navigation between different screens and comprehensive user details.
 
 ## Features
 
-- Fetches top 20 StackOverflow users from the public API.
-- Displays user profile image, display name, and reputation.
-- Allows users to "follow" or "unfollow" StackOverflow users.
-- Follow status is stored locally and persists between app launches.
-- Shows an error message and empty state if the API is unavailable.
-- Built with Jetpack Compose for UI.
-- No third-party frameworks used.
-- Unit tests included for core logic.
+### Core Functionality
+- Fetches top 20 StackOverflow users from the public API
+- Displays user profile image, display name, reputation, and ranking badges
+- Allows users to "follow" or "unfollow" StackOverflow users
+- Follow status is stored locally using DataStore and persists between app launches
+- Shows error messages and empty states when API is unavailable
+
+### Navigation & UI
+- **Tabbed Navigation**: Main interface with "All Users" and "Following" tabs
+- **Following Tab**: Dedicated screen showing only followed users with counter badge
+- **User Details Screen**: Comprehensive user profile with statistics, badges, and additional information
+- **Search Functionality**: Search users by display name, location, or reputation on the All Users tab
+- **Modern UI**: Built entirely with Jetpack Compose and Material 3 design
+
+### User Experience
+- **Dynamic Search**: Real-time filtering with search bar in the top app bar
+- **User Rankings**: Visual badges showing user ranking (gold, silver, bronze) based on reputation
+- **Loading States**: Smooth loading indicators and progress feedback
+- **Error Handling**: Graceful error states with retry functionality
+- **Responsive Design**: Optimized layouts for different screen sizes
+
+### Technical Features
+- **Hilt Dependency Injection**: Proper dependency management
+- **DataStore Persistence**: Modern replacement for SharedPreferences
+- **MVVM Architecture**: Clean separation of concerns with ViewModels
+- **Coroutines**: Asynchronous operations with proper error handling
+- **Unit Tests**: Comprehensive test coverage for core functionality
 
 ## Installation
 
@@ -26,45 +45,93 @@ Pixel-Tech-Test is an Android application written in Kotlin using Jetpack Compos
 
 ## Usage
 
-- Launch the app to see the list of StackOverflow users.
-- Tap "Follow" to follow a user; tap "Unfollow" to remove.
-- Followed users are indicated in the list.
-- If the app cannot reach the API, an error message is shown.
+### Main Navigation
+- Launch the app to see the tabbed interface
+- **All Users Tab**: Browse all StackOverflow users with search functionality
+- **Following Tab**: View only the users you're following (counter shows total)
+
+### User Interactions
+- **Follow/Unfollow**: Tap the follow button on any user card
+- **Search**: Use the search icon in the top bar to filter users by name, location, or reputation
+- **View Details**: Tap on any user to see their detailed profile with statistics
+- **Navigation**: Use the back button or bottom tabs to navigate between screens
+
+### User Details Screen
+- Comprehensive user profile with avatar and background
+- Detailed statistics including reputation, badges, and ranking
+- User information such as location, website, and account details
+- Follow/unfollow functionality with immediate UI feedback
 
 ## Technical Decisions & Explanations
 
 ### Architecture
+- **MVVM Pattern**: Chosen for separation of concerns, testability, and maintainability
+- **Repository Pattern**: Abstracts data fetching and local persistence
+- **Hilt Integration**: Provides dependency injection for ViewModels and repositories
+- **Navigation Component**: Handles complex navigation flows between screens
 
-- **MVVM Pattern:** Chosen for separation of concerns, testability, and clarity. ViewModels handle business logic and state, Compose manages UI.
-- **Repository Layer:** Abstracts data fetching and local persistence, making it easier to test and maintain.
-- **Local Persistence:** Used `SharedPreferences` for simplicity and to meet the "no third-party frameworks" requirement. This keeps follow status between sessions.
+### Data Persistence
+- **DataStore**: Modern replacement for SharedPreferences, providing type-safe and asynchronous data storage
+- **Flow-based State Management**: Reactive programming with StateFlow for UI state updates
 
-### UI
+### UI/UX Design
+- **Material 3**: Latest Material Design components and theming
+- **Jetpack Compose**: Modern declarative UI toolkit
+- **Responsive Layouts**: Adapts to different screen sizes and orientations
+- **Visual Hierarchy**: Clear information hierarchy with proper typography and spacing
 
-- **Jetpack Compose:** Required by the spec; provides a modern, declarative way to build UI.
-- **Error Handling:** The UI displays an empty state and error message if the API fails, improving user experience.
+### Performance & Reliability
+- **Coroutines**: Efficient asynchronous programming for network calls and data operations
+- **Error Handling**: Comprehensive error states with user-friendly messages
+- **Loading States**: Proper loading indicators and progress feedback
+- **Memory Management**: Efficient image loading and state management
 
-### Testing
+### Testing Strategy
+- **Unit Tests**: Core business logic and data operations
+- **UI State Testing**: ViewModel state management and user interactions
+- **Repository Testing**: Data fetching and persistence operations
 
-- **Unit Tests:** Core logic (e.g., follow/unfollow, data parsing) is covered by unit tests to ensure reliability and facilitate future changes.
-- **No Third-Party Libraries:** All code is written using standard Android and Kotlin libraries to comply with requirements.
+## API Integration
 
-### API
-
-- **StackOverflow API:** Uses the provided endpoint to fetch user data. Handles network errors gracefully.
+- **StackOverflow API**: Uses the official StackOverflow API v2.2
+- **Endpoint**: `/users?page=1&pagesize=20&order=desc&sort=reputation&site=stackoverflow`
+- **Error Handling**: Graceful handling of network timeouts and API failures
+- **Data Parsing**: Manual JSON parsing for lightweight implementation
 
 ## Limitations
 
-- No actual "follow" API calls; follow status is simulated and stored locally.
-- No pagination or search; only the top 20 users are shown.
+- Follow functionality is local-only (no actual API calls to StackOverflow)
+- Limited to top 20 users (no pagination implemented)
+- Search is client-side only (no server-side filtering)
+- No user authentication or personalization features
 
 ## How to Run Tests
 
-- Run unit tests from Android Studio using the built-in test runner.
+Run unit tests from Android Studio using the built-in test runner, or use the command line:
+```bash
+./gradlew test
+```
+
+## Project Structure
+
+```
+app/src/main/java/com/example/pixeltechtest/
+├── data/
+│   ├── model/          # Data models (User, BadgeCounts)
+│   └── repository/     # Data layer (UserRepository)
+├── di/                 # Dependency injection modules
+├── ui/
+│   ├── compose/        # Composable screens and components
+│   ├── navigation/     # Navigation setup and routing
+│   └── viewmodel/      # ViewModels for state management
+└── MainActivity.kt     # Main activity and app setup
+```
 
 ## Why These Choices?
 
-- **MVVM** improves maintainability and testability.
-- **Compose** is modern and required.
-- **No third-party frameworks** keeps the code simple and demonstrates core Android/Kotlin skills.
-- **Local persistence** with SharedPreferences is lightweight and sufficient for the requirements.
+- **DataStore over SharedPreferences**: Type-safe, asynchronous, and modern
+- **Hilt over Manual DI**: Reduces boilerplate and provides compile-time safety
+- **Navigation Component**: Handles complex navigation flows and deep linking
+- **Material 3**: Latest design system with improved accessibility and theming
+- **Jetpack Compose**: Modern, declarative UI with less boilerplate than XML layouts
+- **MVVM Architecture**: Testable, maintainable, and follows Android best practices
