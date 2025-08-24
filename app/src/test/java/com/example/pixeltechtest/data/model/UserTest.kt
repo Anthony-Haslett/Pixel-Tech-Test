@@ -53,7 +53,7 @@ class UserTest {
             userId = 123,
             displayName = "Test User",
             reputation = 1000,
-            profileImage = null,
+            profileImage = "http://example.com/default.jpg", // profileImage is non-nullable
             location = null,
             websiteUrl = null,
             link = "http://stackoverflow.com/users/123",
@@ -68,7 +68,7 @@ class UserTest {
         )
 
         // Then
-        assertNull(user.profileImage)
+        assertEquals("http://example.com/default.jpg", user.profileImage) // profileImage is non-nullable
         assertNull(user.location)
         assertNull(user.websiteUrl)
         assertNull(user.acceptRate)
@@ -109,10 +109,14 @@ class UserTest {
             userId = 123,
             displayName = "Test User",
             reputation = 50000,
+            profileImage = "http://example.com/image.jpg",
+            location = "Test City",
+            websiteUrl = "http://example.com",
             link = "http://stackoverflow.com/users/123",
             badgeCounts = badgeCounts1,
             isEmployee = false,
             userType = "registered",
+            acceptRate = 85,
             creationDate = 1234567890,
             lastAccessDate = 1234567900,
             lastModifiedDate = 1234567895,
@@ -123,10 +127,14 @@ class UserTest {
             userId = 123,
             displayName = "Test User",
             reputation = 50000,
+            profileImage = "http://example.com/image.jpg",
+            location = "Test City",
+            websiteUrl = "http://example.com",
             link = "http://stackoverflow.com/users/123",
             badgeCounts = badgeCounts2,
             isEmployee = false,
             userType = "registered",
+            acceptRate = 85,
             creationDate = 1234567890,
             lastAccessDate = 1234567900,
             lastModifiedDate = 1234567895,
